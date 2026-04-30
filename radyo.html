@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kanal Player Demo</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #f5f5f5;
+      padding: 20px;
+    }
+    #kategori-listesi, #kanal-listesi {
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    button {
+      padding: 10px 15px;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    video, iframe, audio {
+      width: 100%;
+      max-width: 800px;
+      aspect-ratio: 16 / 9;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      margin-top: 20px;
+    }
+    #videoPlayer, #iframePlayer, #audioPlayer {
+      display: none;
+    }
+    #fullscreenBtn {
+      margin-top: 10px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+
+  <div id="kategori-listesi">
+    <button onclick="filtrele('Tümü')">Tümü</button>
+    <button onclick="filtrele('Ulusal')">Ulusal</button>
+     <button onclick="filtrele('Radyo')">Radyo</button>
+  </div>
+
+  <div id="kanal-listesi"></div>
+  <button id="fullscreenBtn" onclick="tamEkran()">Tam Ekran</button>
+  <video id="videoPlayer" controls autoplay></video>
+  <iframe id="iframePlayer" allowfullscreen frameborder="0"></iframe>
+  <audio id="audioPlayer" controls autoplay></audio>
+
+
+  <script>
+    const kanallar = [
+      { ad: "RADYO VİVA", kategori: "Ulusal", url: "https://ssl4.radyotvonline.com/radyohome/radyovivahome.stream_aac/playlist.m3u8", iframe: false },
+      { ad: "ALEM FM", kategori: "Ulusal", url: "https://alemfm.radyotvonline.net/alemfmaac?/;stream.mp3", iframe: false }
+    ];
+
+    let aktifOynatici = null;
+    let hlsInstance = null;
+
+    function filtrele(kategori) {
+      const listeDiv = document.getElementById("kanal-listesi");
+      listeDiv.innerHTML = "";
+
+      const filtrelenmis = kategori === "Tümü" 
+        ? kanallar 
+        : kanallar.filter(k => k.kategori === kategori);
+
+      filtrelenmis.forEach(k => {
+        const btn = document.createElement("button");
+        btn.textContent = k.ad;
+        btn.onclick = () => oynatKanal(k.url, k.iframe || k.kategori === 'Radyo');
+        listeDiv.appendChild(btn);
+      });
+    }
+
+    function oynatKanal(url, iframe) {
+      const video = document.getElementById("videoPlayer");
+      const iframeEl = document.getElementById("iframePlayer");
+      const audio = document.getElementById("audioPlayer");
+      const fullscreenBtn = document.getElementById("fullscreenBtn");
+
+      durdur();
+
+      const isAudio = url.match(/\.(mp3|ogg|wav|aac|m4a)$/i);
+      const isM3U8 = url.match(/\.m3u8($|\?)/i);
+
+      if (iframe && !isAudio && !isM3U8) {
+        iframeEl.src = url;
+        iframeEl.style.display = "block";
+        aktifOynatici = iframeEl;
+      } else {
+        if (isAudio) {
+          audio.src = url;
+          audio.style.display = "block";
+          aktifOynatici = audio;
+        } else if (isM3U8 && url.includes('radio')) {
+          if (Hls.isSupported()) {
+            hlsInstance = new Hls();
+            hlsInstance.loadSource(url);
+            hlsInstance.attachMedia(audio);
+          } else if (audio.canPlayType("application/vnd.apple.mpegurl")) {
+            audio.src = url;
+          }
+          audio.style.display = "block";
+          aktifOynatici = audio;
+        } else {
+          if (Hls.isSupported()) {
+            hlsInstance = new Hls();
+            hlsInstance.loadSource(url);
+            hlsInstance.attachMedia(video);
+          } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+            video.src = url;
+          }
+          video.style.display = "block";
+          aktifOynatici = video;
+        }
+      }
+      fullscreenBtn.style.display = aktifOynatici.tagName !== 'AUDIO' ? "inline-block" : "none";
+    }
+
+    function durdur() {
+      const video = document.getElementById("videoPlayer");
+      const iframeEl = document.getElementById("iframePlayer");
+      const audio = document.getElementById("audioPlayer");
+
+      if (aktifOynatici === video) {
+        video.pause();
+        video.removeAttribute("src");
+        video.load();
+        if (hlsInstance) {
+          hlsInstance.destroy();
+          hlsInstance = null;
+        }
+      } else if (aktifOynatici === iframeEl) {
+        iframeEl.src = "";
+      } else if (aktifOynatici === audio) {
+        audio.pause();
+        audio.removeAttribute("src");
+        audio.load();
+        if (hlsInstance) {
+          hlsInstance.destroy();
+          hlsInstance = null;
+        }
+      }
+
+      video.style.display = "none";
+      iframeEl.style.display = "none";
+      audio.style.display = "none";
+    }
+
+    function tamEkran() {
+      if (aktifOynatici && aktifOynatici.tagName !== 'AUDIO') {
+        if (aktifOynatici.tagName === "VIDEO") {
+          aktifOynatici.play();
+        }
+        if (aktifOynatici.requestFullscreen) {
+          aktifOynatici.requestFullscreen();
+        } else if (aktifOynatici.webkitRequestFullscreen) {
+          aktifOynatici.webkitRequestFullscreen();
+        } else if (aktifOynatici.msRequestFullscreen) {
+          aktifOynatici.msRequestFullscreen();
+        }
+      }
+    }
+
+    window.onload = () => {
+      filtrele("");
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream Player</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        #streamList {
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 20px;
+            background-color: rgba(55, 125, 50, 0.1);
+            border-radius: 10px;
+            margin: 20px auto;
+            width: 80%;
+        }
+
+        #streamList li {
+            list-style: none;
+            margin: 10px 0;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: rgba(45, 25, 255, 0.3);
+            transition: background-color 0.3s;
+        }
+
+        #streamList li:hover {
+            background-color: rgba(255, 75, 5, 0.5);
+        }
+
+        h2 {
+            text-align: center;
+            color: #fff;
+        }
+
+        .player-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+
+        .player-container iframe {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 80vh; /* Yükseklik %40 olarak ayarlandı */
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <h2>MAÇVAR</h2>
+
+
+
+<body>
+  <a href="http://tat.somee.com" style="color:#ffffff;">Geri Dön</a>
+</body>
+
+
+
+
+    <ul id="streamList"></ul>
+
+    <div class="player-container" id="playerContainer">
+        <iframe id="videoFrame" src="" allowfullscreen></iframe>
+    </div>
+
+    <script>
+        const kanalurl = {
+            1: "5062",
+            2: "5063",
+            3: "5064",
+            4: "5065",
+            5: "5066",
+            6: "5067",
+            7: "5068",
+            8: "5101",
+            9: "5102",
+            10: "5091",
+            11: "5092",
+            13: "5082",
+            14: "5083",
+            15: "5084",
+            16: "5085",
+            17: "5061",
+            18: "5003",
+            19: "5032",
+            20: "5033",
+            21: "5031",
+            22: "5071",
+            23: "5072",
+            24: "5073",
+            25: "5074",
+            26: "5075",
+            27: "5076",
+            28: "5077",
+            29: "5111",
+            30: "5112",
+            31: "5131",
+            
+            
+        };
+
+        const streamNames = {
+            1: "BEİN SPORTS 1",
+            2: "BEİN SPORTS 2",
+            3: "BEİN SPORTS 3",
+            4: "BEİN SPORTS 4",
+            5: "BEİN SPORTS 5",
+            6: "BEİN SPORTS  MAX 1",
+            7: "BEİN SPORTS  MAX 2",
+            8: "S SPORT 1",
+            9: "S SPORT 2",
+            10: "SPOR SMART 1",
+            11: "SPOR SMART 2",
+            13: "TİVİBU SPOR 1",
+            14: "TİVİBU SPOR 2",
+            15: "TİVİBU SPOR 3",
+            16: "TİVİBU SPOR 4",
+            17: "BEİN SPOR HABER",
+            18: "A SPOR",
+            19: "TRT SPOR",
+            20: "TRT SPOR YILDIZ",
+            21: "TRT 1",
+            22: "TABİİ SPOR",
+            23: "TABİİ SPOR 1",
+            24: "TABİİ SPOR 2",
+            25: "TABİİ SPOR 3",
+            26: "TABİİ SPOR 4",
+            27: "TABİİ SPOR 5",
+            28: "TABİİ SPOR 6",
+            29: "EUROSPORT 1",
+            30: "EUROSPORT 2",
+            31: "CBC SPORT",
+            
+        };
+
+
+        function initializeStreams() {
+            const streamListElement = document.getElementById('streamList');
+            streamListElement.innerHTML = "";
+
+            for (const key in kanalurl) {
+                const streamId = kanalurl[key];
+                const streamName = streamNames[key];
+
+                const listItem = document.createElement('li');
+                listItem.textContent = streamName;
+
+                listItem.onclick = function () {
+                    const videoUrl = `https://macvar3158.live/wp-content/themes/ikisifirbirdokuz/match-center.php?id=${streamId}`;
+                    openPlayer(videoUrl);
+                };
+
+                streamListElement.appendChild(listItem);
+            }
+        }
+
+        function openPlayer(url) {
+            const iframe = document.getElementById('videoFrame');
+            iframe.src = url;
+
+            const playerContainer = document.getElementById('playerContainer');
+            const streamList = document.getElementById('streamList');
+
+            // Listeyi gizle
+            streamList.style.display = 'none';
+            document.querySelector('h2').style.display = 'none';
+
+            playerContainer.style.display = 'block';
+
+            // Player dışına tıklanma ile kapama
+            playerContainer.onclick = function (event) {
+                if (event.target === playerContainer) {
+                    closePlayer();
+                }
+            };
+
+            // Geri tuşu ile kapatma
+            window.onkeydown = function (event) {
+                if (event.key === 'Backspace' || event.key === 'Escape') {
+                    closePlayer();
+                }
+            };
+        }
+
+        function closePlayer() {
+            const playerContainer = document.getElementById('playerContainer');
+            const iframe = document.getElementById('videoFrame');
+            const streamList = document.getElementById('streamList');
+
+            // Listeyi geri getir
+            streamList.style.display = 'block';
+            document.querySelector('h2').style.display = 'block';
+
+            playerContainer.style.display = 'none';
+            iframe.src = '';
+        }
+
+        initializeStreams();
+    </script>
+</body>
+</html>
