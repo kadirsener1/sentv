@@ -3,12 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>SEN TİVİ</title>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/plyr@3.6.2/dist/plyr.css" />
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.1.4/dist/hls.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/plyr@3.6.12/dist/plyr.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/plyr@3.6.2/dist/plyr.css"/>
 
 <style>
 html, body {
@@ -18,14 +17,40 @@ html, body {
   overflow: hidden;
 }
 
-/* FULLSCREEN VIDEO */
+/* VIDEO FULLSCREEN */
 video {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
+}
+
+/* LOGO */
+.logo {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  width: 120px;
+  z-index: 999;
+  opacity: 0.9;
+}
+
+/* MESAJ */
+.offline {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: black;
+  color: white;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  font-size: 22px;
+  z-index: 998;
 }
 
 /* LOADING */
@@ -34,104 +59,24 @@ video {
   width: 100%;
   height: 100%;
   background: black;
-  z-index: 9999;
+  z-index: 1000;
   display: flex;
   justify-content: center;
   align-items: center;
   color: #00b3ff;
-  font-size: 24px;
-  font-family: sans-serif;
 }
 </style>
 </head>
 
 <body>
 
-<div id="loading" class="loading">SEN TİVİ YÜKLENİYOR...</div>
+<div class="loading" id="loading">YÜKLENİYOR...</div>
 
-<video id="video" autoplay muted playsinline></video>
+<img class="logo" src="LOGO_URL_BURAYA">
 
-<script>
-const video = document.getElementById("video");
-const source = "https://api.hitnova.net/s/bm1/mono.m3u8";
-
-/* HLS */
-if (Hls.isSupported()) {
-    const hls = new Hls();
-    hls.loadSource(source);
-    hls.attachMedia(video);
-} else {
-    video.src = source;
-}
-
-/* PLYR (kontroller kapalı) */
-const player = new Plyr(video, {
-    controls: [],
-    autoplay: true,
-    muted: true
-});
-
-/* AUTOPLAY ZORLAMA */
-video.muted = true;
-video.play().catch(() => {});
-
-/* LOADING KAPAT */
-video.addEventListener("playing", () => {
-    document.getElementById("loading").style.display = "none";
-});
-</script>
-
-</body>
-</html><!DOCTYPE html>
-<html lang="tr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>SEN TİVİ</title>
-
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/plyr@3.6.2/dist/plyr.css" />
-<script src="https://cdn.jsdelivr.net/npm/hls.js@1.1.4/dist/hls.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/plyr@3.6.12/dist/plyr.min.js"></script>
-
-<style>
-html, body {
-  margin: 0;
-  padding: 0;
-  background: black;
-  overflow: hidden;
-}
-
-/* FULLSCREEN VIDEO */
-video {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  object-fit: cover;
-}
-
-/* LOADING */
-.loading {
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  background: black;
-  z-index: 9999;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: #00b3ff;
-  font-size: 24px;
-  font-family: sans-serif;
-}
-</style>
-</head>
-
-<body>
-
-<div id="loading" class="loading">SEN TİVİ YÜKLENİYOR...</div>
+<div id="offline" class="offline">
+  Yayın şu anda mevcut değil...
+</div>
 
 <video id="video" autoplay muted playsinline></video>
 
@@ -144,24 +89,41 @@ if (Hls.isSupported()) {
     const hls = new Hls();
     hls.loadSource(source);
     hls.attachMedia(video);
+
+    hls.on(Hls.Events.ERROR, function (event, data) {
+        if (data.fatal) {
+            document.getElementById("offline").style.display = "flex";
+        }
+    });
+
 } else {
     video.src = source;
 }
 
-/* PLYR (kontroller kapalı) */
-const player = new Plyr(video, {
+/* PLAYER */
+new Plyr(video, {
     controls: [],
     autoplay: true,
     muted: true
 });
 
-/* AUTOPLAY ZORLAMA */
+/* AUTOPLAY */
 video.muted = true;
 video.play().catch(() => {});
 
-/* LOADING KAPAT */
+/* PLAYING OLUNCA LOADING GİDER */
 video.addEventListener("playing", () => {
     document.getElementById("loading").style.display = "none";
+});
+
+/* YAYIN YOKSA */
+video.addEventListener("error", () => {
+    document.getElementById("offline").style.display = "flex";
+});
+
+/* KULLANICI DOKUNURSA SES AÇ */
+document.addEventListener("click", () => {
+    video.muted = false;
 });
 </script>
 
